@@ -6,7 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My To-Do List App</title>
 </head>
-<header class="header"><h2>To Do List Application</h2></header>
+<header class="header">
+  <div class="header-title"><h2>To Do List Application</h2></div>
+  <div class="header-menu">About</div><div class="header-sel">Login</div>
+</header>
 <body>
 <div id="container-main" class="container">
   <div id="sidebar" class="sidebar">
@@ -23,6 +26,97 @@
     </div>
   </div>
 </div>
-  <script src="./main.js"></script>
+
+<!-- <div id="modal-wrapper" class="modal"> -->
+  <div id="add-modal" class="modal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Add a New Project</h3>
+          <!-- <button type="button" class="btn" aria-label="Close">X</button> -->
+        </div>
+        <div class="modal-body">
+        
+          <form class="mb-3">
+            <p>
+              <label class="form-label" >Project Name: </label>
+              <input type="text" id="projName" class="form-control">
+            </p>
+            <!--
+            <p>
+              <label class="form-label" >Todo Item Description</label>
+              <input type="text" id="todoDesc" class="form-control" >
+            </p>
+            <p>
+              <label class="form-label" >Todo Due Date</label>
+              <input type="text" id="todoDueDate" class="form-control">
+            </p>
+            <p>
+              <label for="todoPriority" class="form-label" >Todo Priority</label>
+              <select id="todoPriority">
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </p>
+            -->
+
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button id="add-done" class="btn btn-secondary">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="edit-modal" class="modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Add a New Task</h3>
+          <!-- <button type="button" class="btn" aria-label="Close">X</button> -->
+        </div>
+        <div class="modal-body">
+        
+          <form class="mb-3">
+            <p>
+              <label class="form-label" >Project Name: </label>
+              <input type="text" id="projName" class="form-control">
+            </p>
+            
+            <p>
+              <label class="form-label" >Todo Item Description</label>
+              <input type="text" id="todoDesc" class="form-control" >
+            </p>
+            <p>
+              <label class="form-label" >Todo Due Date</label>
+              <input type="text" id="todoDueDate" class="form-control">
+            </p>
+            <p>
+              <label for="todoPriority" class="form-label" >Todo Priority</label>
+              <select id="todoPriority">
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </p>
+            
+
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button id="edit-done" class="btn btn-secondary">Done</button>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+<!-- </div> --> <!-- #modal-wrapper -->
+  <!-- Bootstrap 5.0.2 and Popper JS includes -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+  -->
+  <!-- local JS below -->
+  <script src="./index.main.js"></script>
 </body>
 </html>
