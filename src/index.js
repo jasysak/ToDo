@@ -5,15 +5,14 @@
   created 11/02/2021
 
   Revisions
-  0.01 - PENDING 
+  0.01 - Most basic functionality 
 */
 
-// import { library } from 'webpack';
 import './css/styles.css';
 import { user, todoItem} from './dataModel.js';
 
 const DEFAULT_NUM_PROJ = 2; // placeholder to fill map with 'dummy' objects
-const DEFAULT_NUM_TASKS_PER_PROJ = 10;
+const DEFAULT_NUM_TASKS_PER_PROJ = 6;
 const DEFAULT_PROJECT = 'Default Project';
 
 // temp JSON for initialization
@@ -21,18 +20,15 @@ const defaultKey = DEFAULT_PROJECT;
 const defaultTask = `{"itemID":1,"projectID":2,"ownerID":3,"ownerName":"Jay","projectName":"default","itemDesc":"Insert ToDo item description here.","itemDueDate":"Due Date","itemPriority":"Priority"}`;
 
 // basic clear function - for clearing task/item display area
-function contentClear (cElement, callback) {
-  // clear contents of CONTENT div/children 
-  parent = document.getElementById(cElement);
-  while (parent.firstChild) {
-    parent.removeChild(parent.firstChild);
+function contentClear (clearElement, callback) {
+  while (clearElement.firstChild) {
+    clearElement.removeChild(clearElement.firstChild);
   }
   if (callback) callback();
 }
 
-// display the entire Map to screen (also see conditional below)
-// NOT CURRENTLY USED
-/*
+// display the entire Map to screen (also see conditional below)   NOT CURRENTLY USED
+/* NOT USED !!!
 function showAll () {
   projectMap.forEach( (value, key) => { 
     _tp.innerText += key; // header with project name
@@ -53,22 +49,17 @@ function showAll () {
       outputTemp.appendChild(_ul);
     };
   });
-
 }
 */
 
 // display the project names in the sidebar
 // setup click event to display project details in content-cells
 function sidebar() {
-  let counter = 0;
   let _sb;
   let keys = Array.from(projectMap.keys());
   let outputTemp = document.getElementById('sidebar');
-  
-  if (document.getElementById('sidebar')) contentClear('sidebar', null);  // if a sidebar exists, clear and re-draw
-
+  if (outputTemp) contentClear(outputTemp, null);  // if a sidebar exists, clear and re-draw
   for (let i = 0; i < keys.length; i++) {
-    // console.log(counter++);
     _sb = document.createElement('div');
     _sb.classList.add('item-sidebar');
     _sb.addEventListener('click', (e) => {
@@ -82,27 +73,23 @@ function sidebar() {
   // if (!document.getElementById('content-cells').firstChild) {
   //   dispProjectTaskItems(DEFAULT_PROJECT);
   // }
-  // add new project
   _sb = document.createElement('div');
   _sb.innerText = '+ Add New Project';
   _sb.classList.add('item-sidebar');
-  _sb.id = 'add-new';
-  //_sb.setAttribute();
+  _sb.id = 'add-new'; // may not need this...
   _sb.addEventListener('click', (e) => {
     e.preventDefault();
     addProject();
   });
   outputTemp.appendChild(_sb);
-
-
 }
 
-// display selected project items
+// display selected project task items
 function dispProjectTaskItems (project) {
   let _ul, _li;
-  if (document.getElementById('content-cells').firstChild) contentClear('content-cells', null);
-  if (!project) project = 'Default';
   let outputTemp = document.getElementById('content-cells');
+  if (outputTemp.firstChild) contentClear(outputTemp, null);
+  if (!project) project = 'Default';
   let topBar = document.getElementById('topbar');
   topBar.innerHTML = `<h3>To Do Items for ${project}</h3>`;
   projTaskArray = projectMap.get(project);
@@ -125,62 +112,47 @@ function dispProjectTaskItems (project) {
     };
   }
   else {
-    // console.log('No Tasks-else case');
     outputTemp.innerText = 'No Tasks have been added to this project yet. Click below to add some!';
   }
-  // the "add button"
+  // the add new task button
   _ul = document.createElement('div');
   _ul.classList.add('item-cell');
   _ul.innerText = '+ Add New Task';
-  _ul.id = 'add-task';
+  _ul.id = 'add-task'; // TODO verify this is needed ???
   _ul.addEventListener('click', (e) => {
     e.preventDefault();
     if (projTaskArray === null) editProject('new', project);
-    else editProject('existing');
-  }, {once: true});
+    else editProject('existing', project);
+  }, { once: true });
   outputTemp.appendChild(_ul);
 } 
 
 // add a project from sidebar selection
 function addProject() {
   let _projectName;
-  // pop a data entry/edit form
   toggleModal('add-modal');
-
   let _pAddDone = document.getElementById('add-done');
   _pAddDone.addEventListener('click', (e) => {
     e.preventDefault();
-    _projectName = document.getElementById('projName').value;
+    _projectName = document.getElementById('projName-add').value;
     toggleModal('add-modal');
     projectMap.set(_projectName, null);
     sidebar();
   }, {once: true});
-  
 }
 
-  // let editType = 'new';
-  // editProject(editType);  // editType will be either new or exist 
-  // save form contents to new map item with k=projName, v=array of opbjects from form entry properties, values
-
-  // redisplay sidebar with new/added project included
-  // alert('Not Yet Implemented');
-
 function editProject(editType, projName) {
-  // pop form with blank for new or populated for exist
-    let _itemID, _projectID, _ownerID, _ownerName, _projectName, _itemDesc, _itemDueDate, _itemPriority, callType;
-    // add event listener to "Done" button
-    toggleModal('edit-modal');
-    let _pEditDone = document.getElementById('edit-done');
-    _pEditDone.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (editType === 'new') {
-        
-        let item = new todoItem;
-        item = JSON.parse(defaultTask);
-        let _pTaskArray = [];
-        _pTaskArray.push(item);
-        projectMap.set(projName, _pTaskArray);
-
+  // let _itemID, _projectID, _ownerID, _ownerName, _projectName, _itemDesc, _itemDueDate, _itemPriority, callType;
+  toggleModal('edit-modal');
+  let _pEditDone = document.getElementById('edit-done');
+  _pEditDone.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (editType == 'new') {  
+      let item = new todoItem;
+      item = JSON.parse(defaultTask);
+      let _pTaskArray = [];
+      _pTaskArray.push(item);
+      projectMap.set(projName, _pTaskArray);
         /*
         _itemID = null;
         _projectID = null; // this needs to be an increment from last projID
@@ -193,42 +165,35 @@ function editProject(editType, projName) {
         callType = 0;
         */
       }
-      else if (editType === 'exist') {
+      else if (editType == 'existing') {
+        console.log('Existing project to edit tasks');
+        let item = new todoItem;
+        item = JSON.parse(defaultTask);
+        let _pTaskArray = projectMap.get(projName);
+        _pTaskArray.push(item);
+        projectMap.set(projName, _pTaskArray);
         // read values from the approriate project/task ID
-        // allowing user to edit them in modal dialog  
+        // populate modal entry cells with ex. values
+        // allow user to edit them in modal dialog  
+        // save new values by overwriting old projectMap(projName, values[])
       }
       // addItem(_itemID, _projectID, _ownerID, _ownerName, _projectName, _itemDesc, _itemDueDate, _itemPriority); // pass item details as params here
-    });
-    //
-    toggleModal('edit-modal');
-    //
+      toggleModal('edit-modal');
+      dispProjectTaskItems(projName);
+    }, { once: true });    
 }
 
-function toggleModal(editType) {
+function toggleModal(modalType) {
   let modal; // the modal we want to toggle
-  if (editType === 'other') {
-    modal = document.getElementById('other-modal');
-  } 
-  if (editType === 'add') {
-    modal = document.getElementById('add-modal'); 
-  }
-  modal = document.getElementById(editType); 
+  modal = document.getElementById(modalType); 
+  console.log(modal.classList);
   if (modal.classList.contains('modal-vis')) modal.classList.remove('modal-vis');
   else modal.classList.add('modal-vis');
-  return;
-}
-// add a ToDo item to project
-//
-//
-function addItem (_itemID, _projectID, _ownerID, _ownerName, _projectName, _itemDesc, _itemDueDate, _itemPriority) {
-  console.log(_itemID, _projectID, _ownerID, _ownerName, _projectName, _itemDesc, _itemDueDate, _itemPriority);
-  //
-
 }
 
 // main code begins here
+// the following array may not need to be global. TODO - Verify/update as needed
 let projTaskArray = [];
-let projArray = [];
 
 // main MAP to contain all projects
 let projectMap = new Map();
@@ -243,5 +208,7 @@ for (let i = 0; i < DEFAULT_NUM_PROJ; i++) {
   projectMap.set(DEFAULT_PROJECT, projTaskArray);
 }
 
-// startup
+// startup UI/UX
 sidebar();
+
+// EOF
