@@ -9,7 +9,7 @@
 */
 
 import './css/styles.css';
-import { user, todoItem} from './dataModel.js';
+import { user, todoItem} from './dataModel.js'; // user not used yet
 
 const DEFAULT_NUM_PROJ = 2; // placeholder to fill map with 'dummy' objects
 const DEFAULT_NUM_TASKS_PER_PROJ = 6;
@@ -19,12 +19,20 @@ const DEFAULT_PROJECT = 'Default Project';
 const defaultKey = DEFAULT_PROJECT;
 const defaultTask = `{"itemID":1,"projectID":2,"ownerID":3,"ownerName":"Jay","projectName":"default","itemDesc":"Insert ToDo item description here.","itemDueDate":"Due Date","itemPriority":"Priority"}`;
 
-// basic clear function - for clearing task/item display area
+// basic clear function - for clearing any/all div display area children
 function contentClear (clearElement, callback) {
   while (clearElement.firstChild) {
     clearElement.removeChild(clearElement.firstChild);
   }
   if (callback) callback();
+}
+
+// toggle modal helper function. Pass the main modal element to toggle vis/non-vis
+function toggleModal(modalType) {
+  let modal; // the modal we want to toggle
+  modal = document.getElementById(modalType); 
+  if (modal.classList.contains('modal-vis')) modal.classList.remove('modal-vis');
+  else modal.classList.add('modal-vis');
 }
 
 // display the entire Map to screen (also see conditional below)   NOT CURRENTLY USED
@@ -84,49 +92,6 @@ function sidebar() {
   outputTemp.appendChild(_sb);
 }
 
-// display selected project task items
-function dispProjectTaskItems (project) {
-  let _ul, _li;
-  let outputTemp = document.getElementById('content-cells');
-  if (outputTemp.firstChild) contentClear(outputTemp, null);
-  if (!project) project = 'Default';
-  let topBar = document.getElementById('topbar');
-  topBar.innerHTML = `<h3>To Do Items for ${project}</h3>`;
-  projTaskArray = projectMap.get(project);
-  if (projTaskArray !== null) {
-    for (let i = 0; i < projTaskArray.length; i++) {
-      _ul = document.createElement('div');
-      _ul.classList.add('item-row')
-      Object.keys(projTaskArray[i]).forEach(_key => {      
-        _li = document.createElement('div');
-        _li.classList.add('item-cell');
-        // TEST OK console.log(i + '   ' + value[i][_key] + '    ' + (typeof value[i][_key]) + '   ' + _key);
-        // conditional -- only display the items we want to see - Name, Desc, Due Date, Priority
-        if ((_key === 'itemDesc') || (_key === 'itemDueDate') || (_key === 'itemPriority')) {
-          _li.innerText += projTaskArray[i][_key];
-          _ul.appendChild(_li);
-        }
-      })
-      _ul.innerHTML += '<br>';  // more readable this way. Probably a better way to do this with HTML/CSS/etc.
-      outputTemp.appendChild(_ul);
-    };
-  }
-  else {
-    outputTemp.innerText = 'No Tasks have been added to this project yet. Click below to add some!';
-  }
-  // the add new task button
-  _ul = document.createElement('div');
-  _ul.classList.add('item-cell');
-  _ul.innerText = '+ Add New Task';
-  _ul.id = 'add-task'; // TODO verify this is needed ???
-  _ul.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (projTaskArray === null) editProject('new', project);
-    else editProject('existing', project);
-  }, { once: true });
-  outputTemp.appendChild(_ul);
-} 
-
 // add a project from sidebar selection
 function addProject() {
   let _projectName;
@@ -141,72 +106,139 @@ function addProject() {
   }, {once: true});
 }
 
-function editProject(editType, projName) {
+// display selected project task items
+function dispProjectTaskItems (project) {
+  let _ul, _li;
+  let outputTemp = document.getElementById('content-cells');
+  let _pTaskArray = projectMap.get(project);
+  if (outputTemp.firstChild) contentClear(outputTemp, null);
+  if (!project) project = 'Default';
+  let topBar = document.getElementById('topbar');
+  topBar.innerHTML = `<h3>To Do Items for ${project}</h3>`;
+  if (_pTaskArray !== null) {
+    for (let i = 0; i < _pTaskArray.length; i++) {
+      _ul = document.createElement('div');
+      _ul.classList.add('item-row')
+      Object.keys(_pTaskArray[i]).forEach(_key => {      
+        _li = document.createElement('div');
+        _li.classList.add('item-cell');
+        // TEST OK console.log(i + '   ' + value[i][_key] + '    ' + (typeof value[i][_key]) + '   ' + _key);
+        // conditional -- only display the items we want to see - Name, Desc, Due Date, Priority
+        if ((_key === 'itemDesc') || (_key === 'itemDueDate') || (_key === 'itemPriority')) {
+          _li.innerText += _pTaskArray[i][_key];
+          _ul.appendChild(_li);
+        }
+      })
+      _ul.innerHTML += '<br>';  // more readable this way. Probably a better way to do this with HTML/CSS/etc.
+      outputTemp.appendChild(_ul);
+      // TODO add event listener, checkbox and/or buttons for edit and delete of each task in the list
+    };
+  }
+  else {
+    outputTemp.innerText = 'No Tasks have been added to this project yet. Click below to add some!';
+  }
+  // the add new task button
+  _ul = document.createElement('div');
+  _ul.classList.add('item-cell');
+  _ul.innerText = '+ Add New Task';
+  _ul.id = 'add-task'; // TODO verify this is needed ???
+  _ul.addEventListener('click', (e) => {
+    e.preventDefault();
+    addTask(project);
+  }, { once: true });
+  outputTemp.appendChild(_ul);
+} 
+
+function addTask(projName) {
   // let _itemID, _projectID, _ownerID, _ownerName, _projectName, _itemDesc, _itemDueDate, _itemPriority, callType;
   toggleModal('edit-modal');
   let _pEditDone = document.getElementById('edit-done');
+  document.getElementById('projName-edit').value = projName;  // readonly in HTML
   _pEditDone.addEventListener('click', (e) => {
     e.preventDefault();
-    if (editType == 'new') {  
-      let item = new todoItem;
-      item = JSON.parse(defaultTask);
-      let _pTaskArray = [];
-      _pTaskArray.push(item);
-      projectMap.set(projName, _pTaskArray);
-        /*
-        _itemID = null;
-        _projectID = null; // this needs to be an increment from last projID
-        _ownerID = null; // for now. No multi-user support yet
-        _ownerName = null; // see above
-        _projectName = document.getElementById('projName').value;
-        _itemDesc = document.getElementById('todoDesc').value;
-        _itemDueDate = document.getElementById('todoDueDate').value;
-        _itemPriority = document.getElementById('todoPriority').value;
-        callType = 0;
-        */
-      }
-      else if (editType == 'existing') {
-        console.log('Existing project to edit tasks');
-        let item = new todoItem;
-        item = JSON.parse(defaultTask);
-        let _pTaskArray = projectMap.get(projName);
-        _pTaskArray.push(item);
-        projectMap.set(projName, _pTaskArray);
-        // read values from the approriate project/task ID
-        // populate modal entry cells with ex. values
-        // allow user to edit them in modal dialog  
-        // save new values by overwriting old projectMap(projName, values[])
-      }
-      // addItem(_itemID, _projectID, _ownerID, _ownerName, _projectName, _itemDesc, _itemDueDate, _itemPriority); // pass item details as params here
-      toggleModal('edit-modal');
-      dispProjectTaskItems(projName);
-    }, { once: true });    
+    let item = new todoItem;
+    // let _pTaskArray = [];
+    let _pTaskArray = projectMap.get(projName);
+    if (_pTaskArray === null) _pTaskArray = []; // for the case where it's a new project with no tasks yet
+    item.itemID = _pTaskArray.length; // either 0 for empty task array or the next array index value
+    item.projectID = null; // null temp
+    item.ownerID = null; // null temp
+    item.ownerName = null; // null temp
+    // item.projectName = document.getElementById('projName-edit').value; // made this readonly in HTML!
+    item.itemDesc = document.getElementById('todoDesc').value;
+    item.itemDueDate = document.getElementById('todoDueDate').value;
+    item.itemPriority = document.getElementById('todoPriority').value;
+    _pTaskArray.push(item);
+    projectMap.set(projName, _pTaskArray);
+    toggleModal('edit-modal');
+    dispProjectTaskItems(projName);
+  }, { once: true });    
 }
 
-function toggleModal(modalType) {
-  let modal; // the modal we want to toggle
-  modal = document.getElementById(modalType); 
-  console.log(modal.classList);
-  if (modal.classList.contains('modal-vis')) modal.classList.remove('modal-vis');
-  else modal.classList.add('modal-vis');
+function editTask (projName) {
+  // Edit any existing task
+  // TODO work in progress
+
+  let item = new todoItem; // might need a new item object ???
+
+  let _pTaskArray = projectMap.get(projName);
+  // edit task object properties here, then re-set projectMap with new array below
+  projectMap.set(projName, _pTaskArray);
+          // read values from the approriate project/task ID
+          // populate modal entry cells with ex. values
+          // allow user to edit them in modal dialog  
+          // save new values by overwriting old projectMap(projName, values[])
+        
+}
+
+function markTaskDone () {
+  // TODO mark a task as done, change style to reflect...but not delete it
+}
+
+function deleteTask () {
+  // TODO 
+  // Entirely remove task
+} 
+
+function deleteProject () {
+  // TODO 
+}
+
+// functions for save/load to/from localStorage
+
+function saveMap () {
+  let projTaskArray = [];
+  // TEMP fill array to build the projectMap with dummy data (defaultTask JSON)
+  for (let i = 0; i < DEFAULT_NUM_TASKS_PER_PROJ; i++) {
+    projTaskArray.push(JSON.parse(defaultTask));
+  }
+  // add TEMP array values to MAP with dummy/default project keys
+  for (let i = 0; i < DEFAULT_NUM_PROJ; i++) {
+    projectMap.set(DEFAULT_PROJECT, projTaskArray);
+  }
+  const obj = {};
+  for (let [key, value] of projectMap) {
+    obj[key] = value;
+  }
+  //TEST SEEMS OK console.log(JSON.stringify(obj));
+  localStorage.setItem('pMap', JSON.stringify(obj));
+}
+
+function loadMap () {
+  return new Map(Object.entries(JSON.parse(localStorage.getItem('pMap'))));
 }
 
 // main code begins here
 // the following array may not need to be global. TODO - Verify/update as needed
-let projTaskArray = [];
+
 
 // main MAP to contain all projects
 let projectMap = new Map();
 
-// TEMP fill array to build the projectMap with dummy data (defaultTask JSON)
-for (let i = 0; i < DEFAULT_NUM_TASKS_PER_PROJ; i++) {
-  projTaskArray.push(JSON.parse(defaultTask));
-}
-
-// add TEMP array values to MAP with dummy/default project keys
-for (let i = 0; i < DEFAULT_NUM_PROJ; i++) {
-  projectMap.set(DEFAULT_PROJECT, projTaskArray);
-}
+// save map with dummy values to start
+saveMap();
+// populate the initial map 
+projectMap = loadMap();
 
 // startup UI/UX
 sidebar();
