@@ -12,7 +12,7 @@ import './css/styles.css';
 import { user, todoItem} from './dataModel.js'; // user not used yet
 
 const DEFAULT_NUM_PROJ = 2; // placeholder to fill map with 'dummy' objects
-const DEFAULT_NUM_TASKS_PER_PROJ = 6;
+const DEFAULT_NUM_TASKS_PER_PROJ = 4;
 const DEFAULT_PROJECT = 'Default Project';
 
 // temp JSON for initialization
@@ -74,7 +74,7 @@ function sidebar() {
       dispProjectTaskItems(keys[i])
       e.preventDefault();
     });
-    _sb.innerText = keys[i] + '_' + i;
+    _sb.innerText = keys[i]; // + '_' + i;
     outputTemp.appendChild(_sb);
   }
   // if no project has been selected (i.e. first run of app) then display DEFAULT_PROJECT
@@ -108,7 +108,7 @@ function addProject() {
 
 // display selected project task items
 function dispProjectTaskItems (project) {
-  let _ul, _li;
+  let _ul, _li, _editBtn, markDoneBtn;
   let outputTemp = document.getElementById('content-cells');
   let _pTaskArray = projectMap.get(project);
   if (outputTemp.firstChild) contentClear(outputTemp, null);
@@ -119,6 +119,7 @@ function dispProjectTaskItems (project) {
     for (let i = 0; i < _pTaskArray.length; i++) {
       _ul = document.createElement('div');
       _ul.classList.add('item-row')
+      _ul.id = project + '_task_' + i;
       Object.keys(_pTaskArray[i]).forEach(_key => {      
         _li = document.createElement('div');
         _li.classList.add('item-cell');
@@ -128,7 +129,27 @@ function dispProjectTaskItems (project) {
           _li.innerText += _pTaskArray[i][_key];
           _ul.appendChild(_li);
         }
-      })
+      });
+      // cell and buttons for Edit, Complete, ... Delete? task
+      _li = document.createElement('div');
+      _li.classList.add('item-cell');
+      _editBtn = document.createElement('button');
+      _editBtn.innerText = 'Edit';
+      _editBtn.classList.add('btn', 'btn-secondary');
+      _editBtn.id = project + '_' + i;
+      _editBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        editTask(project, i);
+      });
+      _li.appendChild(_editBtn);
+
+      markDoneBtn = document.createElement('button');
+      markDoneBtn.innerText = 'Complete';
+      markDoneBtn.addEventListener('click', () => {
+        _ul.style.textDecoration = 'line-through';
+      });
+      _li.appendChild(markDoneBtn);
+      _ul.appendChild(_li);
       _ul.innerHTML += '<br>';  // more readable this way. Probably a better way to do this with HTML/CSS/etc.
       outputTemp.appendChild(_ul);
       // TODO add event listener, checkbox and/or buttons for edit and delete of each task in the list
@@ -175,11 +196,12 @@ function addTask(projName) {
   }, { once: true });    
 }
 
-function editTask (projName) {
+function editTask (projName, taskID) {
   // Edit any existing task
   // TODO work in progress
-
-  let item = new todoItem; // might need a new item object ???
+  console.log('editTask ' + projName + '   ' + taskID);
+  toggleModal('edit-modal');
+  
 
   let _pTaskArray = projectMap.get(projName);
   // edit task object properties here, then re-set projectMap with new array below
@@ -188,7 +210,8 @@ function editTask (projName) {
           // populate modal entry cells with ex. values
           // allow user to edit them in modal dialog  
           // save new values by overwriting old projectMap(projName, values[])
-        
+  
+          toggleModal('edit-modal')     
 }
 
 function markTaskDone () {
