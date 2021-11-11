@@ -1,11 +1,12 @@
 /*
-  To Do List Application 
+  todo - To Do List Application 
 
   by JAS
   created 11/02/2021
 
   Revisions
   0.01 - Most basic functionality 
+  0.02 - ?
 */
 
 import './css/styles.css';
@@ -17,7 +18,7 @@ const DEFAULT_PROJECT = 'Default Project';
 
 // temp JSON for initialization
 const defaultKey = DEFAULT_PROJECT;
-const defaultTask = `{"itemID":1,"projectID":2,"ownerID":3,"ownerName":"Jay","projectName":"default","itemDesc":"Insert ToDo item description here.","itemDueDate":"Due Date","itemPriority":"Priority"}`;
+const defaultTask = `{"itemID":1,"projectID":2,"ownerID":3,"ownerName":"Jay","taskName":"default task","taskDesc":"Insert task item description here.","taskDueDate":"Due Date","taskPriority":"Priority"}`;
 
 // basic clear function - for clearing any/all div display area children
 function contentClear (clearElement, callback) {
@@ -28,11 +29,37 @@ function contentClear (clearElement, callback) {
 }
 
 // toggle modal helper function. Pass the main modal element to toggle vis/non-vis
-function toggleModal(modalType) {
-  let modal; // the modal we want to toggle
-  modal = document.getElementById(modalType); 
-  if (modal.classList.contains('modal-vis')) modal.classList.remove('modal-vis');
-  else modal.classList.add('modal-vis');
+function toggleModal(modal) {
+  if (modal.classList.contains('modal-vis')) modal.classList.remove('modal-vis', 'show');
+  else modal.classList.add('modal-vis', 'show');
+}
+
+function initHeader() {
+  // all this does is provides [limited] functionality to the about and login links
+  // in the page header. TODO - make these actually do something interesting
+  let aboutModal = document.getElementById('about-modal');
+  let aboutBtn = document.getElementById('about');
+  let aboutDone = document.getElementById('about-done');
+  aboutDone.addEventListener('click', (e) => {
+    e.preventDefault();
+    toggleModal(aboutModal)
+  });
+  aboutBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    toggleModal(aboutModal);
+  });
+// login modal - no login currently implemented
+  let loginModal = document.getElementById('login-modal');
+  let loginBtn = document.getElementById('login');
+  let loginDone = document.getElementById('login-done');
+  loginDone.addEventListener('click', (e) => {
+    e.preventDefault();
+    toggleModal(loginModal)
+  });
+  loginBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    toggleModal(loginModal);
+  });
 }
 
 // display the entire Map to screen (also see conditional below)   NOT CURRENTLY USED
@@ -45,12 +72,12 @@ function showAll () {
       _ul = document.createElement('div');
       _ul.classList.add('item-row')
       Object.keys(value[i]).forEach(_key => {      
-        _li = document.createElement('div');
-        _li.classList.add('item-cell');
+        taskCell = document.createElement('div');
+        taskCell.classList.add('item-cell');
         // conditional -- only display the items we want to see - Name, Desc, Due Date, Priority
         if ((_key === 'itemDesc') || (_key === 'itemDueDate') || (_key === 'itemPriority')) {
-          _li.innerText += value[i][_key];
-          _ul.appendChild(_li);
+          taskCell.innerText += value[i][_key];
+          _ul.appendChild(taskCell);
         }
       })
       _ul.innerHTML += '<br>';  // more readable this way. Probably a better way to do this with HTML/CSS/etc.
@@ -63,116 +90,208 @@ function showAll () {
 // display the project names in the sidebar
 // setup click event to display project details in content-cells
 function sidebar() {
-  let _sb;
+  let sidebarCell;
   let keys = Array.from(projectMap.keys());
   let outputTemp = document.getElementById('sidebar');
   if (outputTemp) contentClear(outputTemp, null);  // if a sidebar exists, clear and re-draw
+  sidebarCell = document.createElement('div');
+  sidebarCell.classList.add('topbar');
+  sidebarCell.innerHTML += '<b><h3>Projects</h3></b>';
+  outputTemp.appendChild(sidebarCell);
   for (let i = 0; i < keys.length; i++) {
-    _sb = document.createElement('div');
-    _sb.classList.add('item-sidebar');
-    _sb.addEventListener('click', (e) => {
+    sidebarCell = document.createElement('div');
+    sidebarCell.classList.add('item-sidebar');
+    sidebarCell.addEventListener('click', (e) => {
       dispProjectTaskItems(keys[i])
       e.preventDefault();
     });
-    _sb.innerText = keys[i]; // + '_' + i;
-    outputTemp.appendChild(_sb);
+    sidebarCell.innerText = keys[i]; // + '_' + i;
+    outputTemp.appendChild(sidebarCell);
   }
   // if no project has been selected (i.e. first run of app) then display DEFAULT_PROJECT
   // if (!document.getElementById('content-cells').firstChild) {
   //   dispProjectTaskItems(DEFAULT_PROJECT);
   // }
-  _sb = document.createElement('div');
-  _sb.innerText = '+ Add New Project';
-  _sb.classList.add('item-sidebar');
-  _sb.id = 'add-new'; // may not need this...
-  _sb.addEventListener('click', (e) => {
+  sidebarCell = document.createElement('button');
+  sidebarCell.innerText = '+ Add New Project';
+  sidebarCell.classList.add('btn', 'btn-primary');
+  // sidebarCell.id = 'add-new'; // may not need this...
+  sidebarCell.addEventListener('click', (e) => {
     e.preventDefault();
     addProject();
   });
-  outputTemp.appendChild(_sb);
+  outputTemp.appendChild(sidebarCell);
 }
 
 // add a project from sidebar selection
 function addProject() {
+  let targetModal = document.getElementById('add-project-modal');
   let _projectName;
-  toggleModal('add-modal');
-  let _pAddDone = document.getElementById('add-done');
-  _pAddDone.addEventListener('click', (e) => {
+  toggleModal(targetModal);
+  let projectAddDone = document.getElementById('add-done');
+  projectAddDone.addEventListener('click', (e) => {
     e.preventDefault();
     _projectName = document.getElementById('projName-add').value;
-    toggleModal('add-modal');
+    toggleModal(targetModal);
     projectMap.set(_projectName, null);
     sidebar();
   }, {once: true});
 }
 
 // display selected project task items
+// TODO update this code to allow an array of projects to be displayed instead of JUST ONE
+// Another option would be to construct a second map object with those items you want to display, then
+// adapt the display code below to simply display the whole map (also see commented code above)
+// another idea is change project parameter to an array of projects, then iterate the below code thru the
+// array to display all projects & corresponding tasks
 function dispProjectTaskItems (project) {
-  let _ul, _li, _editBtn, markDoneBtn;
+  let taskRow, taskCell, btn, editBtn, delBtn;
   let outputTemp = document.getElementById('content-cells');
   let _pTaskArray = projectMap.get(project);
   if (outputTemp.firstChild) contentClear(outputTemp, null);
   if (!project) project = 'Default';
   let topBar = document.getElementById('topbar');
-  topBar.innerHTML = `<h3>To Do Items for ${project}</h3>`;
+  topBar.innerHTML = `<h3>To Do Items for ${project}</h3><br>`;
+  
+  // create a header/label bar for table
+  // col 1 - completed checkbox
+  taskRow = document.createElement('div');
+  taskRow.classList.add('item-row')
+  taskCell = document.createElement('div');
+  taskCell.classList.add('col-narrow', 'item-cell');
+  taskCell.innerText = 'Mark\nDone';
+  taskRow.appendChild(taskCell);
+
+  // col 2 - project name MEDIUM
+  taskCell = document.createElement('div');
+  taskCell.classList.add('col-medium', 'item-cell');
+  taskCell.innerText = 'Project Name';
+  taskRow.appendChild(taskCell);
+
+  // col 3 - task name MEDIUM
+  taskCell = document.createElement('div');
+  taskCell.classList.add('col-medium', 'item-cell');
+  taskCell.innerText = 'Task Name';
+  taskRow.appendChild(taskCell);
+
+  // col 4 - task description WIDE
+  taskCell = document.createElement('div');
+  taskCell.classList.add('col-wide', 'item-cell');
+  taskCell.innerText = 'Task Description';
+  taskRow.appendChild(taskCell);
+  
+  // col 5 - due date MEDIUM
+  taskCell = document.createElement('div');
+  taskCell.classList.add('col-medium', 'item-cell');
+  taskCell.innerText = 'Due Date';
+  taskRow.appendChild(taskCell);
+  
+  // col 6 - priority NARROW
+  taskCell = document.createElement('div');
+  taskCell.classList.add('col-narrow', 'item-cell');
+  taskCell.innerText = 'Priority';
+  taskRow.appendChild(taskCell);
+  outputTemp.appendChild(taskRow);
+
   if (_pTaskArray !== null) {
     for (let i = 0; i < _pTaskArray.length; i++) {
-      _ul = document.createElement('div');
-      _ul.classList.add('item-row')
-      _ul.id = project + '_task_' + i;
+      taskRow = document.createElement('div');
+      taskRow.classList.add('item-row')
+      taskRow.id = project + '_task_' + i;
+      let checkbox = document.createElement('input');
+      checkbox.setAttribute('type', 'checkbox');
+      checkbox.classList.add('col-narrow', 'item-cell');
+      checkbox.addEventListener('change', (e) => {
+        console.log('CHECK Checkbox listener');
+        e.preventDefault();
+        markTaskDone(0);  // TODO review/verify fn  TEST with 0
+      });
+      taskRow.appendChild(checkbox);
+      // ADDED project name as first col. after checkbox
+      taskCell = document.createElement('div');
+      taskCell.classList.add('col-medium', 'item-cell');
+      taskCell.innerText += project;
+      taskRow.appendChild(taskCell);
       Object.keys(_pTaskArray[i]).forEach(_key => {      
-        _li = document.createElement('div');
-        _li.classList.add('item-cell');
+        taskCell = document.createElement('div');
+        taskCell.classList.add('item-cell');
         // TEST OK console.log(i + '   ' + value[i][_key] + '    ' + (typeof value[i][_key]) + '   ' + _key);
-        // conditional -- only display the items we want to see - Name, Desc, Due Date, Priority
-        if ((_key === 'itemDesc') || (_key === 'itemDueDate') || (_key === 'itemPriority')) {
-          _li.innerText += _pTaskArray[i][_key];
-          _ul.appendChild(_li);
+        // conditional -- only display the items we want to see - Task Name, Desc, Due Date, Priority
+        if ((_key === 'taskName') || (_key === 'taskDesc') || (_key === 'taskDueDate') || (_key === 'taskPriority')) {
+          taskCell.innerText += _pTaskArray[i][_key];
+          // vary some column widths for cleaner display
+          if (_key === 'taskPriority') taskCell.classList.add('col-narrow');
+          if ((_key === 'taskName') || (_key === 'taskDueDate')) taskCell.classList.add('col-medium');
+          if (_key === 'taskDesc') taskCell.classList.add('col-wide');
+          taskRow.appendChild(taskCell);
         }
       });
-      // cell and buttons for Edit, Complete, ... Delete? task
-      _li = document.createElement('div');
-      _li.classList.add('item-cell');
-      _editBtn = document.createElement('button');
-      _editBtn.innerText = 'Edit';
-      _editBtn.classList.add('btn', 'btn-secondary');
-      _editBtn.id = project + '_' + i;
-      _editBtn.addEventListener('click', (e) => {
+      // item-cell div to hold edit/delete buttons
+
+      // edit button first
+      // editBtn = document.createElement('button');
+      // editBtn.classList.add('btn', 'btn-secondary'); //, 'fa', 'fa-edit'); // font-awesome icons to add
+      // editBtn.innerText = 'Edit';
+      // editBtn.id = project + '_' + i; NOT NEEDED 
+      // editBtn.addEventListener('click', editTask(null, null));
+      // (e) => {
+      //  e.preventDefault();
+      //  editTask(null, null);  // TEMP null for testing only..this should be (project, i)
+      //});
+      // taskCell.appendChild(editBtn);
+      // delete button second
+      // delBtn = document.createElement('button');
+      // delBtn.classList.add('btn', 'btn-secondary'); // , 'fa', 'fa-trash');
+      // delBtn.innerText = 'Delete';
+      // delBtn.addEventListener('click', deleteTask(null, null));
+        // deleteTask(null, null); // (null, null) should be (project, i) or (project name, task ID no.)
+      // });
+      // taskCell.appendChild(delBtn);
+      // taskRow.appendChild(taskCell);
+      // taskRow.innerHTML += '<br>';  // more readable this way. Probably a better way to do this with HTML/CSS/etc.
+      taskCell = document.createElement('div');
+      taskCell.classList.add('item-cell', 'col-last');
+      editBtn = document.createElement('button');
+      editBtn.classList.add('btn', 'btn-secondary', 'fa', 'fa-edit');
+      // editBtn.innerText = 'Edit';
+      // btn.id = 'add-task'; // TODO verify this is needed ???
+      editBtn.addEventListener('click', (e) => {
         e.preventDefault();
         editTask(project, i);
       });
-      _li.appendChild(_editBtn);
-
-      markDoneBtn = document.createElement('button');
-      markDoneBtn.innerText = 'Complete';
-      markDoneBtn.addEventListener('click', () => {
-        _ul.style.textDecoration = 'line-through';
+      taskCell.appendChild(editBtn);
+      delBtn = document.createElement('button');
+      delBtn.classList.add('btn', 'btn-secondary', 'fa', 'fa-edit');
+      // editBtn.innerText = 'Edit';
+      // btn.id = 'add-task'; // TODO verify this is needed ???
+      delBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        deleteTask(project, i);
       });
-      _li.appendChild(markDoneBtn);
-      _ul.appendChild(_li);
-      _ul.innerHTML += '<br>';  // more readable this way. Probably a better way to do this with HTML/CSS/etc.
-      outputTemp.appendChild(_ul);
-      // TODO add event listener, checkbox and/or buttons for edit and delete of each task in the list
+      taskCell.appendChild(delBtn);
+      taskRow.appendChild(taskCell);
+      outputTemp.appendChild(taskRow);
     };
   }
-  else {
-    outputTemp.innerText = 'No Tasks have been added to this project yet. Click below to add some!';
+  else if (_pTaskArray === null) {
+    outputTemp.innerText = 'No Tasks have been added to this project yet. Click below to add some!\n\n';
   }
   // the add new task button
-  _ul = document.createElement('div');
-  _ul.classList.add('item-cell');
-  _ul.innerText = '+ Add New Task';
-  _ul.id = 'add-task'; // TODO verify this is needed ???
-  _ul.addEventListener('click', (e) => {
+  btn = document.createElement('button');
+  btn.classList.add('item-cell', 'btn', 'btn-primary');
+  btn.innerText = '+ Add New Task';
+  btn.id = 'add-task'; // TODO verify this is needed ???
+  btn.addEventListener('click', (e) => {
     e.preventDefault();
     addTask(project);
   }, { once: true });
-  outputTemp.appendChild(_ul);
+  outputTemp.appendChild(btn);
 } 
 
 function addTask(projName) {
+  let targetModal = document.getElementById('add-task-modal');
   // let _itemID, _projectID, _ownerID, _ownerName, _projectName, _itemDesc, _itemDueDate, _itemPriority, callType;
-  toggleModal('edit-modal');
+  toggleModal(targetModal);
   let _pEditDone = document.getElementById('edit-done');
   document.getElementById('projName-edit').value = projName;  // readonly in HTML
   _pEditDone.addEventListener('click', (e) => {
@@ -185,46 +304,65 @@ function addTask(projName) {
     item.projectID = null; // null temp
     item.ownerID = null; // null temp
     item.ownerName = null; // null temp
-    // item.projectName = document.getElementById('projName-edit').value; // made this readonly in HTML!
-    item.itemDesc = document.getElementById('todoDesc').value;
-    item.itemDueDate = document.getElementById('todoDueDate').value;
-    item.itemPriority = document.getElementById('todoPriority').value;
+    item.taskName = document.getElementById('taskName-edit').value; 
+    item.taskDesc = document.getElementById('taskDesc').value;
+    item.taskDueDate = document.getElementById('taskDueDate').value;
+    item.taskPriority = document.getElementById('taskPriority').value;
     _pTaskArray.push(item);
     projectMap.set(projName, _pTaskArray);
-    toggleModal('edit-modal');
+    toggleModal(targetModal);
     dispProjectTaskItems(projName);
   }, { once: true });    
 }
 
+// edit and replace existing task in project
 function editTask (projName, taskID) {
+  let pTaskArray = [];
   // Edit any existing task
   // TODO work in progress
-  console.log('editTask ' + projName + '   ' + taskID);
-  toggleModal('edit-modal');
-  
-
-  let _pTaskArray = projectMap.get(projName);
-  // edit task object properties here, then re-set projectMap with new array below
-  projectMap.set(projName, _pTaskArray);
-          // read values from the approriate project/task ID
-          // populate modal entry cells with ex. values
-          // allow user to edit them in modal dialog  
-          // save new values by overwriting old projectMap(projName, values[])
-  
-          toggleModal('edit-modal')     
+  console.log('Edit Task: ' + taskID + ' from project: ' + projName);
+  let pEditDone = document.getElementById('edit-done');
+  let targetModal = document.getElementById('add-task-modal');
+  let item = new todoItem;
+  pTaskArray = projectMap.get(projName);
+  item = pTaskArray[taskID];
+  document.getElementById('projName-edit').value = projName;
+  document.getElementById('taskName-edit').value = item.taskName;
+  document.getElementById('taskDesc').value = item.taskDesc;
+  document.getElementById('taskDueDate').value = item.taskDueDate;
+  document.getElementById('taskPriority').value = item.taskPriority;
+  // console.log(typeof item, item);
+  toggleModal(targetModal);
+  pEditDone.addEventListener('click', (e) => {
+    e.preventDefault();
+    item.projectID = null; // null temp
+    item.ownerID = null; // null temp
+    item.ownerName = null; // null temp
+    item.taskName = document.getElementById('taskName-edit').value; 
+    item.taskDesc = document.getElementById('taskDesc').value;
+    item.taskDueDate = document.getElementById('taskDueDate').value;
+    item.taskPriority = document.getElementById('taskPriority').value;
+    pTaskArray[taskID] = item;
+    projectMap.set(projName, pTaskArray);
+    toggleModal(targetModal);
+    dispProjectTaskItems(projName);
+  }, { once: true });       
 }
 
-function markTaskDone () {
-  // TODO mark a task as done, change style to reflect...but not delete it
+function markTaskDone (project, task) {
+  console.log('Mark task done for task: ' + task + ' from project: ' + project);
+  // toggle corresponding taskRow text style to strikethrough
 }
 
-function deleteTask () {
-  // TODO 
-  // Entirely remove task
+function deleteTask (project, task) {
+  console.log('Delete task: ' + task + ' from project: ' + project);
+  // delete a task with a confirmation dialog "Click OK to Delete task XXX"
 } 
 
-function deleteProject () {
-  // TODO 
+function deleteProject (project) {
+  console.log('Delete Project: ' + project);
+  // delete entire project (sidebar function)
+  // make sure to have a confirm dialog
 }
 
 // functions for save/load to/from localStorage
@@ -252,8 +390,6 @@ function loadMap () {
 }
 
 // main code begins here
-// the following array may not need to be global. TODO - Verify/update as needed
-
 
 // main MAP to contain all projects
 let projectMap = new Map();
@@ -264,6 +400,7 @@ saveMap();
 projectMap = loadMap();
 
 // startup UI/UX
+initHeader();
 sidebar();
 
 // EOF

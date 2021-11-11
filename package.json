@@ -10,15 +10,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jasysak/ToDo.git"
+    "url": "git+https://github.com/jasysak/todo.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jasysak/ToDo/issues"
+    "url": "https://github.com/jasysak/todo/issues"
   },
-  "homepage": "https://github.com/jasysak/ToDo#readme",
+  "homepage": "https://github.com/jasysak/todo#readme",
   "devDependencies": {
     "css-loader": "^6.5.1",
     "file-loader": "^6.2.0",

@@ -12,15 +12,15 @@ export class user {
 
 // create class for todo list items.
 export class todoItem {
-  constructor (itemID, projectID, ownerID, ownerName, projectName, itemDesc, itemDueDate, itemPriority) {
+  constructor (itemID, projectID, ownerID, ownerName, taskName, taskDesc, taskDueDate, taskPriority) {
     this.itemID = itemID;
     this.projectID = projectID;
     this.ownerID = ownerID;
     this.ownerName = ownerName; // temp
-    this.projectName = projectName; // temp
-    this.itemDesc = itemDesc; 
-    this.itemDueDate = itemDueDate;
-    this.itemPriority = itemPriority;
+    this.taskName = taskName; 
+    this.taskDesc = taskDesc; 
+    this.taskDueDate = taskDueDate;
+    this.taskPriority = taskPriority;
     // add props. as needed
   }
   // add methods as needed
