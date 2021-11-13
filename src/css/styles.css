@@ -41,8 +41,8 @@ li {
   flex-direction: row;
   height: 100%;
   width: 100%;
-  margin: none;
-  flex-grow: 1;
+  margin: 0;
+  max-width: 100%;
 }
 
 
@@ -53,12 +53,13 @@ li {
 }
 
 .sidebar {
+  display: flex;
+  flex-direction: column;
   width: 25%;
   height: 100%;
   font-size: 20px;
-  float: left;
   background-color: steelblue;
-  flex-grow: 1;
+  
 }
 
 .content-items {
@@ -83,8 +84,7 @@ li {
   padding: 4px;
 }
 .item-sidebar {
-  width: 100%;
-  float:left;
+  width: 75%;
 
 }
 
@@ -120,6 +120,10 @@ li {
 button {
   margin: 4px;
   pointer-events: auto;
+}
+
+.task-done {
+  text-decoration: line-through;
 }
 
 /* For modal show/toggle */
