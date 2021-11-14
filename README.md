@@ -17,14 +17,16 @@ OO style, and potentially expand it into a more usable application for a
 specific real-world use case. Other improvements may include multi-user
 capability with either a BaaS or full-fledged backend DB solution, and 
 sanitization of user input/output as needed to minimize potential security 
-concerns. There is also a fair bit of repetition that needs fixing...DRY!
+concerns. There is also a fair bit of repetition that needs fixing (DRY!)
+and the DOM manipulation/UI/UX code desperately needs to be separated out 
+as it's own module(s).
 
 To install:
 
 $ npm install webpack webpack-cli css-loader file-loader html-webpack-plugin style-loader --save-dev
 $ webpack run build
 
-load ./dist/index.html into your favorite browser
+then just load ./dist/index.html into your favorite browser
 
 All code found here is an original creation by me and is licensed under the 
 ISC open source license.
