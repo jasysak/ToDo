@@ -19,7 +19,7 @@ capability with either a BaaS or full-fledged backend DB solution, and
 sanitization of user input/output as needed to minimize potential security 
 concerns. There is also a fair bit of repetition that needs fixing (DRY!)
 and the DOM manipulation/UI/UX code desperately needs to be separated out 
-as it's own module(s).
+as it's own module(s) (along with everything else...).
 
 To install:
 
